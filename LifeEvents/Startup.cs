@@ -1,10 +1,14 @@
+using LifeEvents.Data;
+using LifeEvents.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace LifeEvents
 {
@@ -20,6 +24,10 @@ namespace LifeEvents
         // This method gets called by the runtime. Use this method to add services to the container. This IS JAck
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<IGreeter, Greeter>();
+            services.AddDbContext<LifeEventDbContext>(
+                    opt => opt.UseSqlServer(Configuration.GetConnectionString("LifeEventCS")));
+            services.AddScoped<IEventData, SqlEventData>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
             // In production, the React files will be served from this directory
@@ -30,7 +38,10 @@ namespace LifeEvents
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env,
+                                 IConfiguration configuration,
+                              ILogger<Startup> logger,
+                              IGreeter greeter)
         {
             if (env.IsDevelopment())
             {
